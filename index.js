@@ -20,11 +20,8 @@ app.get("/", async (req, res) => {
 
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
-
-    // Wait for transcript div
     await page.waitForSelector('#transcript', { timeout: 15000 });
 
-    // Extract innerText of transcript
     const transcript = await page.$eval('#transcript', el => el.innerText.trim());
 
     await browser.close();
