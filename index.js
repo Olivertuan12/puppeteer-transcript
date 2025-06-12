@@ -4,10 +4,10 @@ const express = require('express');
 const app = express();
 
 app.get("/", async (req, res) => {
-  const videoUrl = req.query.url || '';
+  const url = req.query.url;
 
-  if (!videoUrl) {
-    return res.status(400).json({ error: 'Missing query param "url"' });
+  if (!url) {
+    return res.status(400).json({ error: 'Missing ?url= parameter' });
   }
 
   let browser;
@@ -19,13 +19,17 @@ app.get("/", async (req, res) => {
     });
 
     const page = await browser.newPage();
-    await page.goto(videoUrl, { waitUntil: 'networkidle2', timeout: 30000 });
-    await page.waitForSelector('#transcript', { timeout: 20000 });
+    await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
 
+    // Chờ phần transcript xuất hiện
+    await page.waitForSelector('#transcript', { timeout: 15000 });
+
+    // Lấy toàn bộ nội dung bên trong khối transcript
     const transcript = await page.$eval('#transcript', el => el.innerText.trim());
-    await browser.close();
 
+    await browser.close();
     return res.json({ transcript });
+
   } catch (err) {
     if (browser) await browser.close();
     return res.status(500).json({ error: err.message });
