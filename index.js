@@ -22,16 +22,16 @@ app.get("/", async (req, res) => {
     // Scroll nhẹ để kích hoạt lazy-loading
     await page.evaluate(() => window.scrollBy(0, window.innerHeight));
 
-    // Lặp kiểm tra transcript có nội dung
+    // Loop retry thủ công thay vì page.waitForTimeout
     let transcript = '';
     for (let i = 0; i < 30; i++) {
       try {
         transcript = await page.$eval('#transcript', el => el.innerText.trim());
         if (transcript.length > 30) break;
-      } catch (err) {
-        // element chưa render
+      } catch (_) {
+        // Không tìm thấy element, tiếp tục loop
       }
-      await page.waitForTimeout(1000); // đợi 1s
+      await new Promise(resolve => setTimeout(resolve, 1000)); // đợi 1 giây
     }
 
     await browser.close();
