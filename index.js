@@ -19,14 +19,27 @@ app.get("/", async (req, res) => {
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
 
-    await page.waitForFunction(() => {
-      const el = document.querySelector('#transcript');
-      return el && el.innerText.trim().length > 10;
-    }, { timeout: 60000 });
+    // Scroll nhẹ để kích hoạt lazy-loading
+    await page.evaluate(() => window.scrollBy(0, window.innerHeight));
 
-    const transcript = await page.$eval('#transcript', el => el.innerText.trim());
+    // Lặp kiểm tra transcript có nội dung
+    let transcript = '';
+    for (let i = 0; i < 30; i++) {
+      try {
+        transcript = await page.$eval('#transcript', el => el.innerText.trim());
+        if (transcript.length > 30) break;
+      } catch (err) {
+        // element chưa render
+      }
+      await page.waitForTimeout(1000); // đợi 1s
+    }
 
     await browser.close();
+
+    if (!transcript || transcript.length < 30) {
+      return res.status(500).json({ error: 'Transcript not loaded in time.' });
+    }
+
     return res.json({ transcript });
 
   } catch (err) {
