@@ -1,17 +1,36 @@
-# Base image
-FROM node:18
+FROM node:18-slim
 
-# Create app directory
+# Install Chromium
+RUN apt-get update && apt-get install -y \
+  chromium \
+  ca-certificates \
+  fonts-liberation \
+  libappindicator3-1 \
+  libasound2 \
+  libatk-bridge2.0-0 \
+  libatk1.0-0 \
+  libcups2 \
+  libdbus-1-3 \
+  libgbm1 \
+  libgdk-pixbuf2.0-0 \
+  libnspr4 \
+  libnss3 \
+  libx11-xcb1 \
+  libxcomposite1 \
+  libxdamage1 \
+  libxrandr2 \
+  xdg-utils \
+  && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
 WORKDIR /app
 
-# Copy files
 COPY . .
 
-# Install deps with legacy peer support
-RUN npm install --legacy-peer-deps
+RUN npm install
 
-# Expose port
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
 EXPOSE 3000
 
-# Start app
-CMD [ "npm", "start" ]
+CMD ["npm", "start"]
