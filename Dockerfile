@@ -1,6 +1,6 @@
 FROM node:18-slim
 
-# Install Chromium
+# Install Chromium and required libs
 RUN apt-get update && apt-get install -y \
   chromium \
   ca-certificates \
@@ -20,16 +20,14 @@ RUN apt-get update && apt-get install -y \
   libxdamage1 \
   libxrandr2 \
   xdg-utils \
-  && rm -rf /var/lib/apt/lists/*
+  --no-install-recommends && \
+  rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
-
 COPY . .
 
 RUN npm install
-
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 EXPOSE 3000
 
