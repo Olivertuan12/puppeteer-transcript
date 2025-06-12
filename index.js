@@ -19,7 +19,11 @@ app.get("/", async (req, res) => {
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
 
-    await page.waitForSelector('#transcript', { timeout: 15000 });
+    // Đợi đến khi transcript có nội dung thực sự
+    await page.waitForFunction(() => {
+      const el = document.querySelector('#transcript');
+      return el && el.innerText.trim().length > 10;
+    }, { timeout: 30000 });
 
     const transcript = await page.$eval('#transcript', el => el.innerText.trim());
 
