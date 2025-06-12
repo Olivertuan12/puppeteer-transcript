@@ -14,17 +14,17 @@ app.get("/", async (req, res) => {
   try {
     browser = await puppeteer.launch({
       args: chromium.args,
-      executablePath: await chromium.executablePath || '/usr/bin/chromium-browser',
+      executablePath: await chromium.executablePath,
       headless: chromium.headless
     });
 
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
 
-    // Chờ phần tử transcript xuất hiện
+    // Wait for transcript div
     await page.waitForSelector('#transcript', { timeout: 15000 });
 
-    // Lấy nội dung trong phần transcript
+    // Extract innerText of transcript
     const transcript = await page.$eval('#transcript', el => el.innerText.trim());
 
     await browser.close();
