@@ -11,27 +11,34 @@ app.get("/", async (req, res) => {
 
   let browser;
   try {
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
+    // Retry 3 lần nếu puppeteer.launch() fail
+    for (let retry = 0; retry < 3; retry++) {
+      try {
+        browser = await puppeteer.launch({
+          headless: true,
+          args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        });
+        break;
+      } catch (err) {
+        console.error(`Retry launching browser (${retry + 1}/3):`, err.message);
+        await new Promise(r => setTimeout(r, 2000));
+        if (retry === 2) throw err;
+      }
+    }
 
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
 
-    // Scroll nhẹ để kích hoạt lazy-loading
+    // Scroll nhẹ kích lazy-load transcript
     await page.evaluate(() => window.scrollBy(0, window.innerHeight));
 
-    // Loop retry thủ công thay vì page.waitForTimeout
     let transcript = '';
     for (let i = 0; i < 30; i++) {
       try {
         transcript = await page.$eval('#transcript', el => el.innerText.trim());
         if (transcript.length > 30) break;
-      } catch (_) {
-        // Không tìm thấy element, tiếp tục loop
-      }
-      await new Promise(resolve => setTimeout(resolve, 1000)); // đợi 1 giây
+      } catch (_) {}
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
     await browser.close();
